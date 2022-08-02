@@ -1,0 +1,121 @@
+﻿                           Syntax of the Test Cases
+                           ------------------------
+
+Every coverage model has one or more corresponding test files. The names of
+the files correspond to the names of the models, with the suffix .fptest.
+Each test case appears on a separate line that contains, in the order given below:
+
+.1 The operation:
+One of the following: + for add, - for subtract, * for multiply, / for divide,
+*+ for fused multiply-add, V for square root, % for remainder,
+rfi for round float to int, cff for convert between different supported
+floating-point format, cfi for convert floating-point to integer,
+cif for convert integer to floating-point, cfd for convert to decimal character string,
+cdf for convert decimal character string to float, qC for quiet comparison,
+sC for signaling comparison, cp for copy, ~ for negate, A for abs, @ for copy sign,
+S for scalb, L for logb, Na for nextafter, ? for class, ?- for issigned,
+?n for isnormal, ?f for isfinite, ?0 for iszero, ?s for issubnormal, ?i for is inf,
+?N for isnan, ?sN for issignaling, ?N for isnan, <C for minnum, >C for maxnum,
+<A for minnummag, >A for maxnummag, =quant for samequantum, quant for quantize,
+Nu for next up, Nd for nextdown, eq for equivalent.
+
+2. The rounding mode:
+one of the following: > (to positive infinity) < (to negative infinity),
+0 (to zero), =0 (nearest, ties to even), or =^ (nearest, ties away from zero).
+
+3. Trapped exceptions:
+x (inexact/XE), u (underflow/UE), o (overflow/OE)
+z (division by zero/ZE) and i (invalid/VE).
+
+4.  The data for input operands.
+See Input and Output Operand Representation below for
+more information about the data representation.
+
+5.  A "->" sign, to separate inputs from results.
+
+6. The data for the outputs.
+See Input and Output Operand Representation
+below for more information about the data representation.
+In case no output is written, a # sign will appear in place of the output data. This may
+occur in the case the invalid exception is enabled and an invalid operation occurred.
+
+7. Exceptions that occur following the operation:
+x (inexact), u/v/w (underflow), o (overflow), z (division by zero) and i (invalid).
+There are three flags for underflow, because the standard permits an implementation to use
+any one of three different definitions of underflow:  u indicates underflow due to tininess and
+"extraordinary" error, v indicates underflow due to tininess and inexactness where tininess is tested
+after rounding, and w indicates underflow due to tininess and inexactness, where tininess is
+tested before rounding. The enable bits are concatenated to one string.
+
+Input and Output Operand Representation
+---------------------------------------
+
+The following describes the supported operand types. For each type, we describe its
+representation in the test-suite.
+
+Data type                       Representation
+-------------------------------------------------
+Binary Floating-Point           <sign><significand>P<exp>. The sign is either + or -,
+                                the significand is a string of hex literals,
+                                exp is the value of the unbiased exponent written as an
+                                integer number.
+                                SNaN numbers are represented using the string S.
+                                QNaN numbers are represented using the string Q.
+                                Infinities are represented using the string <sign>Inf.
+                                Zeros are represented using the string <sign>Zero.
+
+Decimal Floating-Point          <sign><significand>E<exp>. The sign is either + or -,
+                                the significand is a string of decimal digits,
+                                exp is the value of the unbiased exponent written as an
+                                integer number.
+                                SNaN numbers are represented using the string S.
+                                QNaN numbers are represented using the string Q.
+                                Infinities are represented using the string <sign>Inf.
+
+DPD format                      Some of the decimal floating-point data are represented
+                                using their DPD encoding as follows: DPD_<hex string>.
+
+Integer                         <sign><decimal-digits> where sign is either + or -.
+
+Boolean                         0 for false, 1 for true.
+
+External Decimal format         Decimal string, using the notation
+                                <sign> <decimal-digits.decimal-digits> E <exponent>
+                                where sign is either + or.
+
+Return value of the Class
+operation                       The possible values are: sNaN, qNaN, -Inf, -normal,
+                                -subnormal, -0, +0, +subnormal, +normal, +Inf.
+
+Examples
+---------
+
+Basic-Types-Inputs.fptest
+-------------------------
+
+b32?- =0 i  -Inf -> 0x1
+The operation here is isSigned with precision 32 bit, rounding mode is
+nearest, ties to even, the invalid enable bit is on, the input operand is negative infinity,
+and the result is 0x1.
+
+b32+ =0 i  -1.6E9177P49 -1.7FFFFFP127 -> -1.7FFFFFP127 x
+The operation here is addition with precision 32 bit, rounding mode is nearest, ties to
+even, the invalid enable bit is on, first input operand is -1.6E9177P49,
+second input operand is -1.7FFFFFP127, the result is -1.7FFFFFP127, and the inexact
+exception flag is raised.
+
+b32V =0  -1.7FFFFFP127 -> Q i
+The operation here is square-root with precision 32 bit, rounding mode is nearest, ties to
+even, all enable bits are off, the input operand is -1.7FFFFFP127, the result is QNaN and
+the invalid operation exception flag is raised.
+
+b32*+ =0  +0.7FFFFFP-126 -1.7FFFFFP127 -Inf -> -Inf
+The operation here is fused multiply-add with precision 32 bit, rounding mode is nearest,
+ties to even, all enable bits are off, first input operand is +0.7FFFFFP-126, second input
+operand is -1.7FFFFFP127, third input operand is negative infinity, and the result is
+negative infinity.
+
+b32V =0 i -Inf -> # i
+The operation here is square-root with precision 32 bit, rounding mode is nearest, ties to
+even, the invalid enable bit is on, the input operand is -infinity, there is no result
+written, and the invalid operation exception flag is raised.
